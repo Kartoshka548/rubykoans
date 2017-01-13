@@ -16,7 +16,8 @@ class AboutSandwichCode < Neo::Koan
   end
 
   def test_counting_lines
-    assert_equal __, count_lines("example_file.txt")
+    lines = File.open("example_file.txt") { |f| f.collect {1}.inject(:+) }
+    assert_equal lines, count_lines("example_file.txt")
   end
 
   # ------------------------------------------------------------------
@@ -31,7 +32,7 @@ class AboutSandwichCode < Neo::Koan
   end
 
   def test_finding_lines
-    assert_equal __, find_line("example_file.txt")
+    assert_equal `grep e example_file.txt`, find_line("example_file.txt")
   end
 
   # ------------------------------------------------------------------
@@ -76,17 +77,29 @@ class AboutSandwichCode < Neo::Koan
   end
 
   def test_counting_lines2
-    assert_equal __, count_lines2("example_file.txt")
+    assert_equal(
+        `wc -l example_file.txt`.split[0].to_i,
+        count_lines2("example_file.txt")
+    )
   end
 
   # ------------------------------------------------------------------
 
   def find_line2(file_name)
-    # Rewrite find_line using the file_sandwich library function.
+    l = file_sandwich(file_name) { |f| f.find { |l| l =~ /e/ } }
   end
 
   def test_finding_lines2
-    assert_equal __, find_line2("example_file.txt")
+    assert_equal(
+      File.open("example_file.txt") do |f|
+        while l = f.readline
+          next unless /e/ =~ l
+          break
+        end
+        l
+      end,
+      find_line2("example_file.txt")
+    )
   end
 
   # ------------------------------------------------------------------
@@ -102,7 +115,15 @@ class AboutSandwichCode < Neo::Koan
   end
 
   def test_open_handles_the_file_sandwich_when_given_a_block
-    assert_equal __, count_lines3("example_file.txt")
+    fname = 'example_file.txt'
+    grep, awk = "grep -c ^ #{fname}", "awk 'END {print NR}' #{fname}"
+    line_count = %x(#{awk})
+    assert %x(#{grep}) == line_count, '%s -> %s' % [awk, line_count]
+
+    assert_equal(
+      line_count.chomp.to_i,
+      count_lines3("example_file.txt")
+    )
   end
 
 end
